@@ -26,7 +26,6 @@ const els = {
   posBlock: $("posBlock"),
   position: $("position"),
   classRank: $("classRank"),
-  posChg: $("posChg"),
   aheadLabel: $("aheadLabel"),
   behindLabel: $("behindLabel"),
   aheadTag: $("aheadTag"),
@@ -61,7 +60,6 @@ const els = {
   racePack: $("racePack"),
   racePits: $("racePits"),
   raceLaps: $("raceLaps"),
-  raceChg: $("raceChg"),
   fieldKicker: $("fieldKicker"),
   thS1: $("thS1"),
   thS2: $("thS2"),
@@ -196,7 +194,6 @@ function renderHero(s, m) {
   if (!f) {
     els.position.textContent = "—";
     els.classRank.textContent = "Nincs a sorrendben";
-    els.posChg.hidden = true;
     return;
   }
 
@@ -210,16 +207,6 @@ function renderHero(s, m) {
   prevPos = pos;
   els.position.textContent = pos;
   els.classRank.textContent = `#${f.STNR} · ${f.CLASSNAME || "—"} · kat. P${f.CLASSRANK || "—"}`;
-
-  const chg = Number(f.CHG);
-  if (Number.isFinite(chg) && chg !== 0) {
-    els.posChg.hidden = false;
-    els.posChg.textContent = chg > 0 ? `↑ +${chg}` : `↓ ${chg}`;
-    els.posChg.classList.toggle("up", chg > 0);
-    els.posChg.classList.toggle("down", chg < 0);
-  } else {
-    els.posChg.hidden = true;
-  }
 
   if (s.analysis?.modeLabel) {
     const finished = isRaceFinished(s);
@@ -564,14 +551,6 @@ function renderRace(s, m) {
   }
   if (els.racePits) els.racePits.textContent = focus?.PITSTOPCOUNT ?? "—";
   if (els.raceLaps) els.raceLaps.textContent = focus?.LAPS ?? "—";
-  if (els.raceChg) {
-    const chg = focus?.CHG;
-    els.raceChg.textContent =
-      chg == null || chg === "" ? "—" : String(chg);
-    els.raceChg.className = `mono ${
-      Number(chg) > 0 ? "pos" : Number(chg) < 0 ? "neg" : ""
-    }`;
-  }
 
   if (!els.racePack) return;
   const results = [...(s?.results || [])].sort(
@@ -1072,7 +1051,6 @@ function demoRaceSnapshot(s) {
     focus.S3TIME = focus.S3TIME || "15.398";
     focus.LAPS = focus.LAPS || "8";
     focus.PITSTOPCOUNT = focus.PITSTOPCOUNT ?? "0";
-    focus.CHG = focus.CHG ?? 1;
 
     // Reorder list so POSITION matches: P2 ahead, Kiss P3, P4 behind
     const others = results.filter((r) => String(r.STNR) !== String(focus.STNR));
