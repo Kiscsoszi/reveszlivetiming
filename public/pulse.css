@@ -715,6 +715,16 @@ body.is-race .gap-theater .theater-center {
   color: var(--p-amber);
 }
 
+.points-table .pts-delta.behind {
+  color: var(--p-danger);
+  font-weight: 700;
+}
+
+.points-table .pts-delta.ahead {
+  color: var(--p-green);
+  font-weight: 700;
+}
+
 .points-table .pts-members {
   font-size: 0.72rem;
   line-height: 1.45;

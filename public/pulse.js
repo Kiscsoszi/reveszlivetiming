@@ -779,12 +779,20 @@ function setPointsView(view) {
   if (lastSnapshot) renderPoints(lastSnapshot);
 }
 
+function formatPtsVsNorbi(pts, norbiPts, isNorbi) {
+  if (isNorbi) return { text: "—", cls: "" };
+  const d = Number(pts) - Number(norbiPts);
+  if (!Number.isFinite(d)) return { text: "—", cls: "" };
+  if (d === 0) return { text: "0", cls: "" };
+  if (d > 0) return { text: `+${d}`, cls: "pts-delta ahead" };
+  return { text: String(d), cls: "pts-delta behind" };
+}
+
 function renderPoints(s) {
   if (!els.pointsRows || !els.pointsHead) return;
   const race = isRaceMode(s?.analysis?.mode || wallMode);
   const alreadyIn = isSessionAlreadyRecorded(seasonStandings, s?.session);
   const finished = isRaceFinished(s);
-  // Show race points until persisted into season; never call it "élő" after the flag
   const racePts = race && !alreadyIn;
   const liveOverlay = racePts && !finished;
   const { scale, label } = resolvePointsScale(s?.session);
@@ -807,8 +815,8 @@ function renderPoints(s) {
         ? "Futam vége · szezon + futampont"
         : "Futam · szezon + élő pont"
       : pointsView === "teams"
-        ? "Szezon · csapatok"
-        : "Szezon · pilóták";
+        ? "Szezon · csapatok · Δ Norbi"
+        : "Szezon · pilóták · Δ Norbi";
   }
 
   if (!seasonStandings) {
@@ -823,35 +831,44 @@ function renderPoints(s) {
       includeLive: racePts,
       scale,
     });
-    els.pointsHead.innerHTML = racePts
-      ? `<tr><th>P</th><th>Csapat</th><th>Pilóták</th><th>Szezon</th><th>${addCol}</th><th>Összesen</th></tr>`
-      : `<tr><th>P</th><th>Csapat</th><th>Szezon</th></tr>`;
+    const norbiTeam =
+      rows.find((t) => t.id === "revesz-reinert") ||
+      rows.find((t) => t.drivers.some((d) => String(d.stnr) === "1"));
+    const norbiRef = racePts
+      ? Number(norbiTeam?.projected) || 0
+      : Number(norbiTeam?.seasonPoints) || 0;
 
-    const focusTeam = rows.find((t) => t.id === "revesz-reinert") ||
-      rows.find((t) => t.drivers.some((d) => String(d.stnr) === focusNo));
+    els.pointsHead.innerHTML = racePts
+      ? `<tr><th>P</th><th>Csapat</th><th>Pilóták</th><th>Szezon</th><th>${addCol}</th><th>Összesen</th><th>Δ Norbi</th></tr>`
+      : `<tr><th>P</th><th>Csapat</th><th>Szezon</th><th>Δ Norbi</th></tr>`;
+
     renderPointsClinch(seasonStandings, {
       race,
       liveOverlay,
       finished: finished && racePts,
       projectedFocus: null,
-      projectedTeam: focusTeam?.projected ?? null,
+      projectedTeam: norbiTeam?.projected ?? null,
       thisRaceMax,
     });
 
     if (!rows.length) {
-      els.pointsRows.innerHTML = `<tr><td colspan="${racePts ? 6 : 3}" class="field-empty">Nincs csapatadat</td></tr>`;
+      els.pointsRows.innerHTML = `<tr><td colspan="${racePts ? 7 : 4}" class="field-empty">Nincs csapatadat</td></tr>`;
       return;
     }
 
     els.pointsRows.innerHTML = rows
       .map((t) => {
-        const isFocus = t.drivers.some((d) => String(d.stnr) === focusNo) ||
-          t.id === "revesz-reinert";
+        const isFocus =
+          t.id === "revesz-reinert" ||
+          t.drivers.some((d) => String(d.stnr) === focusNo);
+        const pts = racePts ? t.projected : t.seasonPoints;
+        const delta = formatPtsVsNorbi(pts, norbiRef, t.id === "revesz-reinert");
         if (!racePts) {
           return `<tr class="${isFocus ? "is-focus" : ""}">
             <td class="num">${escapeHtml(t.position)}</td>
             <td class="name">${escapeHtml(t.short || t.name)}</td>
             <td class="mono pts-val scored">${escapeHtml(t.seasonPoints)}</td>
+            <td class="mono ${delta.cls}">${escapeHtml(delta.text)}</td>
           </tr>`;
         }
         const members = t.drivers.length
@@ -870,6 +887,7 @@ function renderPoints(s) {
           <td class="mono">${escapeHtml(t.seasonPoints)}</td>
           <td class="mono pts-val ${t.livePoints > 0 ? "scored" : ""}">${add}</td>
           <td class="mono pts-val scored">${escapeHtml(t.projected)}</td>
+          <td class="mono ${delta.cls}">${escapeHtml(delta.text)}</td>
         </tr>`;
       })
       .join("");
@@ -880,14 +898,24 @@ function renderPoints(s) {
     includeLive: racePts,
     scale,
   });
-  els.pointsHead.innerHTML = racePts
-    ? `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Hely</th><th>Szezon</th><th>${addCol}</th><th>Összesen</th></tr>`
-    : `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Szezon</th></tr>`;
+  const norbiRow =
+    rows.find((r) => String(r.stnr) === "1") ||
+    rows.find((r) => /KISS/i.test(r.name || ""));
+  const norbiRef = racePts
+    ? Number(norbiRow?.projected) || 0
+    : Number(norbiRow?.seasonPoints) || 0;
 
-  const focusRow = rows.find((r) => String(r.stnr) === focusNo) ||
-    rows.find((r) => String(r.stnr) === "1");
+  els.pointsHead.innerHTML = racePts
+    ? `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Hely</th><th>Szezon</th><th>${addCol}</th><th>Összesen</th><th>Δ Norbi</th></tr>`
+    : `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Szezon</th><th>Δ Norbi</th></tr>`;
+
+  const focusRow =
+    rows.find((r) => String(r.stnr) === focusNo) || norbiRow;
   const teamRows = racePts
-    ? buildSeasonTeamRows(seasonStandings, s?.results || [], { includeLive: true, scale })
+    ? buildSeasonTeamRows(seasonStandings, s?.results || [], {
+        includeLive: true,
+        scale,
+      })
     : [];
   const focusTeam = teamRows.find((t) => t.id === "revesz-reinert");
   renderPointsClinch(seasonStandings, {
@@ -900,19 +928,23 @@ function renderPoints(s) {
   });
 
   if (!rows.length) {
-    els.pointsRows.innerHTML = `<tr><td colspan="${racePts ? 7 : 4}" class="field-empty">Nincs szezonadat</td></tr>`;
+    els.pointsRows.innerHTML = `<tr><td colspan="${racePts ? 8 : 5}" class="field-empty">Nincs szezonadat</td></tr>`;
     return;
   }
 
   els.pointsRows.innerHTML = rows
     .map((r) => {
       const focus = String(r.stnr) === focusNo || String(r.stnr) === "1";
+      const isNorbi = String(r.stnr) === "1" || /KISS/i.test(r.name || "");
+      const pts = racePts ? r.projected : r.seasonPoints;
+      const delta = formatPtsVsNorbi(pts, norbiRef, isNorbi);
       if (!racePts) {
         return `<tr class="${focus ? "is-focus" : ""}">
           <td class="num">${escapeHtml(r.position)}</td>
           <td class="mono">${escapeHtml(r.stnr || "—")}</td>
           <td class="name">${escapeHtml(r.name)}</td>
           <td class="mono pts-val scored">${escapeHtml(r.seasonPoints)}</td>
+          <td class="mono ${delta.cls}">${escapeHtml(delta.text)}</td>
         </tr>`;
       }
       const add = r.livePoints > 0 ? `+${escapeHtml(r.livePoints)}` : "—";
@@ -924,6 +956,7 @@ function renderPoints(s) {
         <td class="mono">${escapeHtml(r.seasonPoints)}</td>
         <td class="mono pts-val ${r.livePoints > 0 ? "scored" : ""}">${add}</td>
         <td class="mono pts-val scored">${escapeHtml(r.projected)}</td>
+        <td class="mono ${delta.cls}">${escapeHtml(delta.text)}</td>
       </tr>`;
     })
     .join("");
