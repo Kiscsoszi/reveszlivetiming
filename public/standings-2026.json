@@ -1,0 +1,35 @@
+{
+  "season": 2026,
+  "label": "2026 · 4 forduló után (BEL előtt)",
+  "updated": "2026-09-11",
+  "source": "FIA classifications",
+  "note": "Base standings before Belgian Truck GP. Race results in data/race-results.json are added on top.",
+  "drivers": [
+    { "name": "KISS", "stnr": "1", "points": 220 },
+    { "name": "LENZ", "stnr": "30", "points": 137 },
+    { "name": "HAHN", "stnr": "2", "points": 124 },
+    { "name": "ALBACETE", "stnr": "23", "points": 116 },
+    { "name": "HALM", "stnr": "44", "points": 84 },
+    { "name": "RODRIGUES", "stnr": "38", "points": 80 },
+    { "name": "REINERT", "stnr": "77", "points": 68 },
+    { "name": "TAYLOR", "stnr": "81", "points": 67 },
+    { "name": "LUKAS HAHN", "stnr": null, "points": 58 },
+    { "name": "NEWELL", "stnr": "18", "points": 52 },
+    { "name": "LACKO", "stnr": null, "points": 25 },
+    { "name": "SMITH", "stnr": "11", "points": 21 },
+    { "name": "FAAS", "stnr": "24", "points": 11 },
+    { "name": "GARRETT", "stnr": "42", "points": 9 },
+    { "name": "KURSCH", "stnr": "33", "points": 9 },
+    { "name": "RECUENCO", "stnr": "64", "points": 6 },
+    { "name": "ANDRÉ", "stnr": "66", "points": 1 }
+  ],
+  "teams": [
+    { "id": "revesz-reinert", "points": 302 },
+    { "id": "bullen", "points": 218 },
+    { "id": "lowenpower", "points": 207 },
+    { "id": "taylor-rodrigues", "points": 162 },
+    { "id": "bernau-smith", "points": 151 },
+    { "id": "faas-recuenco", "points": 35 },
+    { "id": "h-and-k", "points": 13 }
+  ]
+}

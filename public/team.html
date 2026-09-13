@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>KISS TEAM — Mérnöki timing</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Russo+One&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="rr-header">
+        <img
+          class="rr-flag"
+          src="https://www.reveszracing.com/REVESZRACING/logo/zaszlo.png"
+          alt=""
+          aria-hidden="true"
+        />
+        <a class="rr-brand" href="https://www.reveszracing.com/kamion" target="_blank" rel="noopener">
+          <img
+            class="rr-logo"
+            src="https://www.reveszracing.com/REVESZRACING/logo/Revesz-Racing-logo.svg"
+            alt="Révész Racing"
+          />
+          <div class="rr-titles">
+            <span>Mérnöki timing</span>
+            <span>Kiss Norbert · #1</span>
+            <span>Csapat belső nézet</span>
+          </div>
+        </a>
+        <div class="rr-livebox">
+          <span class="live-badge">
+            <span class="pulse" id="pulse"></span>
+            <span id="statusText">Kapcsolódás…</span>
+          </span>
+          <span class="feed-meta mono" id="feedMeta">WS várakozik</span>
+        </div>
+      </header>
+
+      <section class="rr-band">
+        <div class="section-head">
+          <div>
+            <p class="kicker" id="sessionLine">Szekció</p>
+            <h2 id="heatTitle">Kiss #1 — mérnöki panel</h2>
+          </div>
+          <p class="mode-chip" id="modeChip">—</p>
+        </div>
+
+        <div class="eng-grid" id="engPrimary">
+          <!-- filled by JS -->
+        </div>
+      </section>
+
+      <section class="rr-band">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Szektor delta</p>
+            <h2>Session besthez képest</h2>
+          </div>
+          <p id="theoLine">—</p>
+        </div>
+        <div class="sector-grid" id="sectorGrid"></div>
+      </section>
+
+      <section class="eng-split">
+        <div class="rr-band">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Csata</p>
+              <h2>Elöl / hátul / kategória</h2>
+            </div>
+          </div>
+          <div id="battle"></div>
+        </div>
+        <div class="rr-band">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Pace</p>
+              <h2>Rangsor & elméleti</h2>
+            </div>
+          </div>
+          <div id="paceBox"></div>
+        </div>
+      </section>
+
+      <section class="eng-split">
+        <div class="rr-band">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Pálya</p>
+              <h2>Élő mezőny</h2>
+            </div>
+            <p id="animMeta">előző kör tempója</p>
+          </div>
+          <div class="track-stage">
+            <div class="track-map">
+              <object id="trackObject" type="image/svg+xml" data="/tracks/zolder.svg?v=1"></object>
+            </div>
+            <div class="track-hud">
+              <div class="hud-row">
+                <span>Szektor</span>
+                <strong id="animSector">—</strong>
+              </div>
+              <div class="hud-row">
+                <span>Köridő</span>
+                <strong class="mono" id="animLap">—</strong>
+              </div>
+              <div class="hud-row">
+                <span>Forrás</span>
+                <strong id="animSource">—</strong>
+              </div>
+              <button type="button" class="anim-btn" id="animToggle">Szünet</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rr-band">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Körök</p>
+              <h2>Lap by lap</h2>
+            </div>
+            <p>PB kiemelve</p>
+          </div>
+          <div class="session-tabs" id="sessionTabs"></div>
+          <div class="table-wrap history-table">
+            <table class="classif">
+              <thead>
+                <tr>
+                  <th>Kör</th>
+                  <th>Idő</th>
+                  <th>Δ PB</th>
+                  <th>S1</th>
+                  <th>S2</th>
+                  <th>S3</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="historyRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="rr-band">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Race control</p>
+            <h2>Releváns üzenetek</h2>
+          </div>
+        </div>
+        <div id="messages"></div>
+      </section>
+
+      <section class="rr-band">
+        <div class="board-head">
+          <div>
+            <p class="kicker">Teljes mezőny</p>
+            <h2>Szektorokkal</h2>
+          </div>
+          <p id="trackLine">—</p>
+        </div>
+        <div class="table-wrap">
+          <table class="classif">
+            <thead>
+              <tr>
+                <th>Hely</th>
+                <th>#</th>
+                <th>Versenyző</th>
+                <th>Kat.</th>
+                <th>Hátrány</th>
+                <th>Int</th>
+                <th>Utolsó</th>
+                <th>Legjobb</th>
+                <th>S1</th>
+                <th>S2</th>
+                <th>S3</th>
+                <th>Kör</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <span>Mérnöki nézet · <a href="/">Látogatói oldal →</a></span>
+        <span id="clock">—</span>
+      </footer>
+    </div>
+    <script type="module" src="/team.js"></script>
+  </body>
+</html>

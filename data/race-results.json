@@ -1,0 +1,53 @@
+{
+  "event": "Belgian Truck Grand Prix — Circuit Zolder",
+  "races": [
+    {
+      "id": "zolder-2026-r1",
+      "sessionId": "manual-r1",
+      "heat": "Race 1",
+      "heatNumber": 1,
+      "scale": "r13",
+      "source": "Final Result Overall Race 1 PDF",
+      "recordedAt": "2026-09-12T14:37:00.000Z",
+      "results": [
+        { "position": 1, "stnr": "1", "name": "KISS" },
+        { "position": 2, "stnr": "23", "name": "ALBACETE" },
+        { "position": 3, "stnr": "2", "name": "HAHN" },
+        { "position": 4, "stnr": "38", "name": "RODRIGUES" },
+        { "position": 5, "stnr": "18", "name": "NEWELL" },
+        { "position": 6, "stnr": "81", "name": "TAYLOR" },
+        { "position": 7, "stnr": "30", "name": "LENZ" },
+        { "position": 8, "stnr": "77", "name": "REINERT" },
+        { "position": 9, "stnr": "44", "name": "HALM" },
+        { "position": 10, "stnr": "66", "name": "ANDRÉ" },
+        { "position": 11, "stnr": "42", "name": "GARRETT" },
+        { "position": 12, "stnr": "64", "name": "RECUENCO" },
+        { "position": 13, "stnr": "33", "name": "KURSCH" }
+      ]
+    },
+    {
+      "id": "zolder-2026-r2",
+      "sessionId": "manual-r2",
+      "heat": "Race 2",
+      "heatNumber": 2,
+      "scale": "r24",
+      "source": "Final Result Overall Race 2 PDF",
+      "recordedAt": "2026-09-12T18:11:00.000Z",
+      "results": [
+        { "position": 1, "stnr": "30", "name": "LENZ" },
+        { "position": 2, "stnr": "77", "name": "REINERT" },
+        { "position": 3, "stnr": "2", "name": "HAHN" },
+        { "position": 4, "stnr": "1", "name": "KISS" },
+        { "position": 5, "stnr": "18", "name": "NEWELL" },
+        { "position": 6, "stnr": "23", "name": "ALBACETE" },
+        { "position": 7, "stnr": "44", "name": "HALM" },
+        { "position": 8, "stnr": "81", "name": "TAYLOR" },
+        { "position": 9, "stnr": "42", "name": "GARRETT" },
+        { "position": 10, "stnr": "33", "name": "KURSCH" },
+        { "position": 11, "stnr": "64", "name": "RECUENCO" },
+        { "position": 12, "stnr": "24", "name": "FAAS" },
+        { "position": 13, "stnr": "38", "name": "RODRIGUES" }
+      ]
+    }
+  ]
+}

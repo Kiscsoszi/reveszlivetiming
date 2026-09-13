@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no"
+    />
+    <title>KISS PULSE — Csapatfal</title>
+    <meta name="description" content="Kiss Norbert élő race wall — Révész Racing" />
+    <meta name="theme-color" content="#e62d37" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="KISS PULSE" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/pulse.css" />
+  </head>
+  <body class="pulse-body">
+    <div class="pulse-grain" aria-hidden="true"></div>
+
+    <header class="pulse-top" id="topBar">
+      <a class="pulse-brand" href="https://www.reveszracing.com/kamion" target="_blank" rel="noopener">
+        <img
+          src="https://www.reveszracing.com/REVESZRACING/logo/Revesz-Racing-logo.svg"
+          alt="Révész Racing"
+        />
+        <span>PULSE</span>
+      </a>
+      <div class="pulse-session">
+        <p class="pulse-kicker" id="sessionLine">Goodyear FIA ETRC</p>
+        <h1 id="heatTitle">Kiss #1</h1>
+      </div>
+      <div class="pulse-live">
+        <span class="pulse-dot" id="liveDot"></span>
+        <span id="statusText">Kapcsolódás…</span>
+        <span class="mono" id="feedMeta"></span>
+      </div>
+    </header>
+
+    <div class="clinch-bar mono" id="clinchBar" hidden>
+      <span class="clinch-label">Cím</span>
+      <span id="clinchText">—</span>
+    </div>
+
+    <main class="pulse-wall">
+      <section class="pulse-hero" id="secLive">
+        <div class="pos-block" id="posBlock">
+          <p class="pulse-kicker">Helyezés</p>
+          <div class="pos-giant mono" id="position">—</div>
+          <p class="pos-meta" id="classRank">—</p>
+          <p class="pos-chg mono" id="posChg" hidden></p>
+        </div>
+
+        <div class="gap-theater" id="gapTheater">
+          <div class="theater-labels">
+            <span id="aheadLabel">Elöl</span>
+            <span class="theater-center">KISS</span>
+            <span id="behindLabel">Hátul</span>
+          </div>
+          <div class="theater-track">
+            <div class="theater-rail"></div>
+            <div class="theater-car ahead" id="carAhead">
+              <span class="car-tag mono" id="aheadTag">—</span>
+            </div>
+            <div class="theater-car focus" id="carFocus">
+              <span class="car-tag">#1</span>
+            </div>
+            <div class="theater-car behind" id="carBehind">
+              <span class="car-tag mono" id="behindTag">—</span>
+            </div>
+          </div>
+          <div class="theater-gaps">
+            <div>
+              <span class="pulse-kicker">Interval elöl</span>
+              <strong class="mono" id="gapAhead">—</strong>
+            </div>
+            <div>
+              <span class="pulse-kicker">Hátrány</span>
+              <strong class="mono" id="gapLeader">—</strong>
+            </div>
+            <div>
+              <span class="pulse-kicker">Interval hátul</span>
+              <strong class="mono" id="gapBehind">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-chip" id="modeChip">—</div>
+      </section>
+
+      <section class="pulse-mid">
+        <div class="sector-radar" id="secSectors">
+          <div class="section-label">
+            <p class="pulse-kicker">Last vs Best</p>
+            <h2>Szektorok</h2>
+          </div>
+          <div class="radar-row" id="sectorRadar"></div>
+          <div class="sector-foot" id="theoLine"></div>
+        </div>
+
+        <div class="pace-panel hunt-panel" id="panelQualy">
+          <div class="section-label">
+            <p class="pulse-kicker">Best lap hunt</p>
+            <h2>Pole chase</h2>
+          </div>
+          <div class="hunt-heroes">
+            <div class="hunt-hero">
+              <span class="pulse-kicker">vs Pole</span>
+              <strong class="mono" id="huntPole">—</strong>
+              <span class="hunt-sub mono" id="huntPoleWho">—</span>
+            </div>
+            <div class="hunt-hero">
+              <span class="pulse-kicker">vs Kat. P1</span>
+              <strong class="mono" id="huntClass">—</strong>
+              <span class="hunt-sub mono" id="huntClassWho">—</span>
+            </div>
+            <div class="hunt-hero rank">
+              <span class="pulse-kicker">Best rank</span>
+              <strong class="mono" id="huntRank">—</strong>
+              <span class="hunt-sub mono" id="huntClassRank">—</span>
+            </div>
+          </div>
+          <div class="hunt-ladder" id="huntLadder"></div>
+        </div>
+
+        <div class="pace-panel race-panel" id="panelRace" hidden>
+          <div class="section-label">
+            <p class="pulse-kicker">Race pace</p>
+            <h2>Battle pack</h2>
+          </div>
+          <div class="hunt-heroes race-heroes">
+            <div class="hunt-hero">
+              <span class="pulse-kicker">Last vs elöl</span>
+              <strong class="mono" id="raceVsAhead">—</strong>
+              <span class="hunt-sub mono" id="raceAheadLap">—</span>
+            </div>
+            <div class="hunt-hero rank">
+              <span class="pulse-kicker">Utolsó kör</span>
+              <strong class="mono" id="raceLast">—</strong>
+              <span class="hunt-sub mono" id="raceLastMeta">—</span>
+            </div>
+            <div class="hunt-hero">
+              <span class="pulse-kicker">Last vs hátul</span>
+              <strong class="mono" id="raceVsBehind">—</strong>
+              <span class="hunt-sub mono" id="raceBehindLap">—</span>
+            </div>
+          </div>
+          <div class="hunt-ladder race-pack" id="racePack"></div>
+          <div class="race-foot">
+            <div class="sector-chip">
+              <span class="pulse-kicker">Pit</span>
+              <strong class="mono" id="racePits">—</strong>
+            </div>
+            <div class="sector-chip">
+              <span class="pulse-kicker">Kör</span>
+              <strong class="mono" id="raceLaps">—</strong>
+            </div>
+            <div class="sector-chip">
+              <span class="pulse-kicker">CHG</span>
+              <strong class="mono" id="raceChg">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="track-panel is-collapsed" id="secTrack">
+          <div class="section-label track-head">
+            <div>
+              <p class="pulse-kicker">Mezőny</p>
+              <h2>Pálya</h2>
+            </div>
+            <button type="button" class="soft-btn" id="trackToggle" aria-expanded="false">
+              Mutat
+            </button>
+          </div>
+          <div class="track-stage pulse-track" id="trackStage">
+            <div class="track-map">
+              <object id="trackObject" type="image/svg+xml" data="/tracks/zolder.svg?v=1"></object>
+            </div>
+            <p class="track-meta mono" id="animMeta">—</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="field-board" id="secField" aria-label="Sorrend">
+        <div class="section-label field-head">
+          <div>
+            <p class="pulse-kicker" id="fieldKicker">Sorrend · best kör szektorok</p>
+            <h2>Mezőny</h2>
+          </div>
+          <div class="field-tools">
+            <button type="button" class="soft-btn" id="jumpFocusBtn">Kiss</button>
+            <p class="mono field-count" id="fieldCount">—</p>
+          </div>
+        </div>
+        <div class="field-scroll" id="fieldScroll">
+          <table class="field-table">
+            <thead>
+              <tr>
+                <th>P</th>
+                <th>#</th>
+                <th>Versenyző</th>
+                <th class="col-desk">Kat.</th>
+                <th>Gap</th>
+                <th>Int</th>
+                <th>Last</th>
+                <th class="col-desk">Best</th>
+                <th id="thS1" class="col-sec">BS1</th>
+                <th id="thS2" class="col-sec">BS2</th>
+                <th id="thS3" class="col-sec">BS3</th>
+                <th class="col-desk">Kör</th>
+              </tr>
+            </thead>
+            <tbody id="fieldRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="points-board" id="secPoints" aria-label="Ponttábla">
+        <div class="section-label field-head">
+          <div>
+            <p class="pulse-kicker" id="pointsKicker">Szezon · pilóták</p>
+            <h2 id="pointsTitle">Pilóták</h2>
+            <p class="points-clinch mono" id="pointsClinch" hidden></p>
+          </div>
+          <div class="points-tools">
+            <p class="mono field-count" id="pointsScale">—</p>
+            <div class="points-toggle" role="group" aria-label="Pontnézet">
+              <button type="button" class="points-btn is-active" id="pointsBtnDrivers" data-view="drivers">
+                Pilóták
+              </button>
+              <button type="button" class="points-btn" id="pointsBtnTeams" data-view="teams">
+                Csapatok
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="field-scroll points-scroll">
+          <table class="field-table points-table">
+            <thead id="pointsHead"></thead>
+            <tbody id="pointsRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="pulse-ticker" id="secRc" aria-label="Race control">
+      <div class="ticker-label">RC</div>
+      <div class="ticker-viewport">
+        <div class="ticker-track" id="rcTicker">
+          <span class="ticker-item">Várakozás az üzenetekre…</span>
+        </div>
+      </div>
+      <time class="mono" id="clock">—</time>
+    </footer>
+
+    <nav class="pulse-dock" id="pulseDock" aria-label="Gyorsnavigáció">
+      <button type="button" class="dock-btn is-active" data-jump="secLive">
+        <span class="dock-ico" aria-hidden="true">●</span>
+        <span>Élő</span>
+      </button>
+      <button type="button" class="dock-btn" data-jump="secSectors">
+        <span class="dock-ico" aria-hidden="true">◈</span>
+        <span>Szektor</span>
+      </button>
+      <button type="button" class="dock-btn" data-jump="secField">
+        <span class="dock-ico" aria-hidden="true">☰</span>
+        <span>Mezőny</span>
+      </button>
+      <button type="button" class="dock-btn" data-jump="secPoints">
+        <span class="dock-ico" aria-hidden="true">★</span>
+        <span>Pont</span>
+      </button>
+      <button type="button" class="dock-btn" id="wakeBtn" aria-pressed="false" title="Képernyő ébren">
+        <span class="dock-ico" aria-hidden="true">☀</span>
+        <span>Ébren</span>
+      </button>
+    </nav>
+
+    <script type="module" src="/pulse.js"></script>
+  </body>
+</html>
