@@ -1278,7 +1278,7 @@ body.is-race .gap-theater .theater-center {
   .points-scroll {
     max-height: min(58vh, 480px);
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
   }
 
   .field-table {
