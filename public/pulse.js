@@ -593,17 +593,46 @@ function renderField(s) {
     .join("");
 }
 
-function renderPointsClinch(standings, { race = false, projectedFocus = null, projectedTeam = null } = {}) {
+function isSessionAlreadyRecorded(standings, session) {
+  const sid = String(session?.session || "").trim();
+  if (!sid) return false;
+  return (standings?.races || []).some((r) => {
+    if (String(r.sessionId || "") === sid) return true;
+    if (String(r.id || "").startsWith(`${sid}-`)) return true;
+    return false;
+  });
+}
+
+function thisRaceMaxFromScale(scale) {
+  if (!scale?.length) return 20;
+  return Math.max(...scale);
+}
+
+function renderPointsClinch(
+  standings,
+  {
+    race = false,
+    liveOverlay = false,
+    projectedFocus = null,
+    projectedTeam = null,
+    thisRaceMax = 20,
+  } = {},
+) {
   const clinch = standings?.clinch;
   const parts = [];
+  const remainingAfter = Math.max(0, (clinch?.driver?.remainingMax ?? 0) - thisRaceMax);
 
   if (clinch?.driver) {
     if (clinch.driver.clinched) {
       parts.push("Norbi: bajnok");
-    } else if (race && projectedFocus != null) {
-      const liveNeed = Math.max(0, clinch.driver.threat - projectedFocus + 1);
+    } else if (liveOverlay && projectedFocus != null) {
+      // "ha így": season+live, remaining AFTER this race (don't double-count this race's pot)
+      const threatLive =
+        (clinch.driver.threatRival?.points ?? clinch.driver.threat - clinch.driver.remainingMax) +
+        remainingAfter;
+      const liveNeed = Math.max(0, threatLive - projectedFocus + 1);
       parts.push(
-        liveNeed < clinch.driver.need
+        liveNeed !== clinch.driver.need
           ? `Norbi: még ${clinch.driver.need} → ha így ${liveNeed}`
           : `Norbi: még ${clinch.driver.need} pont a címhez`,
       );
@@ -612,12 +641,20 @@ function renderPointsClinch(standings, { race = false, projectedFocus = null, pr
     }
   }
   if (clinch?.team) {
+    const teamRaceMax = thisRaceMax >= 20 ? 35 : 19;
+    const teamRemainingAfter = Math.max(
+      0,
+      (clinch.team.remainingMax ?? 0) - teamRaceMax,
+    );
     if (clinch.team.clinched) {
       parts.push("Csapat: csapatbajnok");
-    } else if (race && projectedTeam != null) {
-      const liveNeed = Math.max(0, clinch.team.threat - projectedTeam + 1);
+    } else if (liveOverlay && projectedTeam != null) {
+      const threatLive =
+        (clinch.team.threatRival?.points ?? clinch.team.threat - clinch.team.remainingMax) +
+        teamRemainingAfter;
+      const liveNeed = Math.max(0, threatLive - projectedTeam + 1);
       parts.push(
-        liveNeed < clinch.team.need
+        liveNeed !== clinch.team.need
           ? `Csapat: még ${clinch.team.need} → ha így ${liveNeed}`
           : `Csapat: még ${clinch.team.need} pont a csapatbajnokihoz`,
       );
@@ -670,14 +707,18 @@ function setPointsView(view) {
 function renderPoints(s) {
   if (!els.pointsRows || !els.pointsHead) return;
   const race = isRaceMode(s?.analysis?.mode || wallMode);
+  const alreadyIn = isSessionAlreadyRecorded(seasonStandings, s?.session);
+  // After auto-record, session can still be "race" — don't double-add +Élő / "ha így"
+  const liveOverlay = race && !alreadyIn;
   const { scale, label } = resolvePointsScale(s?.session);
   const focusNo = String(s?.focus?.STNR ?? "");
+  const thisRaceMax = thisRaceMaxFromScale(scale);
 
   if (els.pointsScale) {
-    els.pointsScale.textContent = race ? label : "—";
+    els.pointsScale.textContent = liveOverlay ? label : alreadyIn && race ? "rögzítve" : "—";
   }
   if (els.pointsKicker) {
-    els.pointsKicker.textContent = race
+    els.pointsKicker.textContent = liveOverlay
       ? "Futam · szezon + élő pont"
       : pointsView === "teams"
         ? "Szezon · csapatok"
@@ -693,10 +734,10 @@ function renderPoints(s) {
 
   if (pointsView === "teams") {
     const rows = buildSeasonTeamRows(seasonStandings, s?.results || [], {
-      includeLive: race,
+      includeLive: liveOverlay,
       scale,
     });
-    els.pointsHead.innerHTML = race
+    els.pointsHead.innerHTML = liveOverlay
       ? `<tr><th>P</th><th>Csapat</th><th>Pilóták</th><th>Szezon</th><th>+Élő</th><th>Összesen</th></tr>`
       : `<tr><th>P</th><th>Csapat</th><th>Szezon</th></tr>`;
 
@@ -704,12 +745,14 @@ function renderPoints(s) {
       rows.find((t) => t.drivers.some((d) => String(d.stnr) === focusNo));
     renderPointsClinch(seasonStandings, {
       race,
+      liveOverlay,
       projectedFocus: null,
       projectedTeam: focusTeam?.projected ?? null,
+      thisRaceMax,
     });
 
     if (!rows.length) {
-      els.pointsRows.innerHTML = `<tr><td colspan="${race ? 6 : 3}" class="field-empty">Nincs csapatadat</td></tr>`;
+      els.pointsRows.innerHTML = `<tr><td colspan="${liveOverlay ? 6 : 3}" class="field-empty">Nincs csapatadat</td></tr>`;
       return;
     }
 
@@ -717,7 +760,7 @@ function renderPoints(s) {
       .map((t) => {
         const isFocus = t.drivers.some((d) => String(d.stnr) === focusNo) ||
           t.id === "revesz-reinert";
-        if (!race) {
+        if (!liveOverlay) {
           return `<tr class="${isFocus ? "is-focus" : ""}">
             <td class="num">${escapeHtml(t.position)}</td>
             <td class="name">${escapeHtml(t.short || t.name)}</td>
@@ -747,34 +790,36 @@ function renderPoints(s) {
   }
 
   const rows = buildSeasonDriverRows(seasonStandings, s?.results || [], {
-    includeLive: race,
+    includeLive: liveOverlay,
     scale,
   });
-  els.pointsHead.innerHTML = race
+  els.pointsHead.innerHTML = liveOverlay
     ? `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Hely</th><th>Szezon</th><th>+Élő</th><th>Összesen</th></tr>`
     : `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Szezon</th></tr>`;
 
   const focusRow = rows.find((r) => String(r.stnr) === focusNo) ||
     rows.find((r) => String(r.stnr) === "1");
-  const teamRows = race
+  const teamRows = liveOverlay
     ? buildSeasonTeamRows(seasonStandings, s?.results || [], { includeLive: true, scale })
     : [];
   const focusTeam = teamRows.find((t) => t.id === "revesz-reinert");
   renderPointsClinch(seasonStandings, {
     race,
+    liveOverlay,
     projectedFocus: focusRow?.projected ?? null,
     projectedTeam: focusTeam?.projected ?? null,
+    thisRaceMax,
   });
 
   if (!rows.length) {
-    els.pointsRows.innerHTML = `<tr><td colspan="${race ? 7 : 4}" class="field-empty">Nincs szezonadat</td></tr>`;
+    els.pointsRows.innerHTML = `<tr><td colspan="${liveOverlay ? 7 : 4}" class="field-empty">Nincs szezonadat</td></tr>`;
     return;
   }
 
   els.pointsRows.innerHTML = rows
     .map((r) => {
       const focus = String(r.stnr) === focusNo || String(r.stnr) === "1";
-      if (!race) {
+      if (!liveOverlay) {
         return `<tr class="${focus ? "is-focus" : ""}">
           <td class="num">${escapeHtml(r.position)}</td>
           <td class="mono">${escapeHtml(r.stnr || "—")}</td>
