@@ -1,5 +1,5 @@
-/* KISS PULSE — offline shell cache */
-const CACHE = "kiss-pulse-v4";
+/* Kiss Livetiming — offline shell cache */
+const CACHE = "kiss-livetiming-v1";
 const PRECACHE = [
   "/",
   "/pulse.html",

@@ -1,7 +1,7 @@
 {
-  "name": "KISS PULSE — Révész Racing",
-  "short_name": "KISS PULSE",
-  "description": "Kiss Norbert élő race wall — Goodyear FIA ETRC",
+  "name": "Kiss Livetiming — Révész Racing",
+  "short_name": "Livetiming",
+  "description": "Kiss Norbert élő livetiming — Goodyear FIA ETRC",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

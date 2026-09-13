@@ -1,4 +1,4 @@
-# Kiss Live
+# Kiss Livetiming
 
 Norbert Kiss–focused live timing board for the Goodyear FIA ETRC public feed.
 
