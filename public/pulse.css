@@ -145,6 +145,12 @@ body {
   animation: livePulse 1.6s ease-out infinite;
 }
 
+.pulse-dot.done {
+  background: var(--p-amber);
+  box-shadow: none;
+  animation: none;
+}
+
 .pulse-dot.offline {
   background: var(--p-danger);
 }

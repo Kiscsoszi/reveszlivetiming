@@ -131,6 +131,57 @@ function parseGapSeconds(value) {
   return parseTime(raw);
 }
 
+function isRaceFinished(s) {
+  if (!isRaceMode(s?.analysis?.mode || wallMode)) return false;
+  if (isSessionAlreadyRecorded(seasonStandings, s?.session)) return true;
+  const bag = [
+    ...(s?.messages || []),
+    ...(s?.analysis?.relevantMessages || []),
+  ];
+  if (
+    bag.some((m) =>
+      /CHEQUERED|CHECKERED|CÉLZÁSZLÓ|CELZASZLO|FINAL CLASSIFICATION|RACE\s*FINISHED/i.test(
+        String(m.message || m.MESSAGE || m || ""),
+      ),
+    )
+  ) {
+    return true;
+  }
+  // Timing often switches GAP to "----LAP n" after the flag
+  if (/LAP\s*\d+/i.test(String(s?.focus?.GAP || ""))) return true;
+  return false;
+}
+
+/** Compact post-race line: place + gaps to rivals (not "ÉLŐ"). */
+function finishedDiffLine(s) {
+  const f = s?.focus;
+  const battle = s?.analysis?.battle;
+  const pos = f?.POSITION != null ? `P${f.POSITION}` : "P—";
+  const bits = ["VÉGE", pos];
+
+  if (String(f?.POSITION) === "1") {
+    if (battle?.behind?.interval) {
+      bits.push(`P2 ${battle.behind.interval}`);
+    } else if (battle?.behind) {
+      bits.push(`P2 #${battle.behind.stnr}`);
+    }
+  } else {
+    if (battle?.ahead?.interval) {
+      bits.push(`↑ ${battle.ahead.interval}`);
+    } else if (f?.INT && f.INT !== "—") {
+      bits.push(`↑ ${f.INT}`);
+    }
+    if (f?.GAP && f.GAP !== "—" && !/LAP/i.test(String(f.GAP))) {
+      bits.push(`P1 ${f.GAP}`);
+    }
+    if (battle?.behind?.interval) {
+      bits.push(`↓ ${battle.behind.interval}`);
+    }
+  }
+
+  return bits.join(" · ");
+}
+
 function renderHero(s, m) {
   const f = s.focus;
   if (!f) {
@@ -162,7 +213,10 @@ function renderHero(s, m) {
   }
 
   if (s.analysis?.modeLabel) {
-    els.modeChip.textContent = s.analysis.modeLabel.toUpperCase();
+    const finished = isRaceFinished(s);
+    els.modeChip.textContent = finished
+      ? "VÉGEREDMÉNY"
+      : s.analysis.modeLabel.toUpperCase();
   }
 
   renderGapTheater(s, m);
@@ -218,7 +272,13 @@ function renderGapTheater(s, m) {
 
   els.gapAhead.textContent =
     battle?.ahead?.interval || (String(f?.POSITION) === "1" ? "P1" : "—");
-  els.gapLeader.textContent = f?.GAP || "—";
+  // After the flag GAP often becomes "----LAP n" — show clear leader delta instead
+  const gapRaw = String(f?.GAP || "");
+  els.gapLeader.textContent = /LAP/i.test(gapRaw)
+    ? String(f?.POSITION) === "1"
+      ? "vezet"
+      : battle?.ahead?.interval || f?.INT || "—"
+    : f?.GAP || "—";
   els.gapBehind.textContent = battle?.behind?.interval || "—";
 }
 
@@ -856,19 +916,29 @@ function apply(s) {
     }
   }
 
-  const live = s.connected && s.focus;
+  const finished = isRaceFinished(s);
+  const live = s.connected && s.focus && !finished;
   els.liveDot.classList.toggle("live", Boolean(live));
+  els.liveDot.classList.toggle("done", Boolean(finished && s.connected));
   els.liveDot.classList.toggle("offline", !s.connected);
   els.statusText.textContent = !s.connected
     ? "Újracsatlakozás"
-    : s.error || (s.focus ? "ÉLŐ" : "Várakozás");
+    : s.error ||
+      (finished
+        ? finishedDiffLine(s)
+        : s.focus
+          ? "ÉLŐ"
+          : "Várakozás");
   refreshFeedAge();
 
   if (s.session) {
     els.sessionLine.textContent = [s.session.cup, s.session.trackName]
       .filter(Boolean)
       .join(" · ");
-    els.heatTitle.textContent = `Kiss #1 — ${s.session.heat || "szekció"}`;
+    const heat = s.session.heat || "szekció";
+    els.heatTitle.textContent = finished
+      ? `Kiss #1 — ${heat} · vége`
+      : `Kiss #1 — ${heat}`;
   }
 
   const m = engineerMetrics(s);
