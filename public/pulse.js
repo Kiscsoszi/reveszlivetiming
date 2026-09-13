@@ -50,10 +50,14 @@ const els = {
   panelRace: $("panelRace"),
   raceVsAhead: $("raceVsAhead"),
   raceAheadLap: $("raceAheadLap"),
+  raceAheadKicker: $("raceAheadKicker"),
+  raceAheadCard: $("raceAheadCard"),
   raceLast: $("raceLast"),
   raceLastMeta: $("raceLastMeta"),
   raceVsBehind: $("raceVsBehind"),
   raceBehindLap: $("raceBehindLap"),
+  raceBehindKicker: $("raceBehindKicker"),
+  raceBehindCard: $("raceBehindCard"),
   racePack: $("racePack"),
   racePits: $("racePits"),
   raceLaps: $("raceLaps"),
@@ -452,13 +456,19 @@ function renderRace(s, m) {
   };
 
   if (els.raceVsAhead) {
-    els.raceVsAhead.textContent = formatDelta(vsAhead);
-    els.raceVsAhead.className = `mono ${tone(vsAhead)}`;
+    els.raceVsAhead.textContent = ahead ? formatDelta(vsAhead) : "P1";
+    els.raceVsAhead.className = `mono ${ahead ? tone(vsAhead) : "pos"}`;
+  }
+  if (els.raceAheadKicker) {
+    els.raceAheadKicker.textContent = ahead ? "Last vs elöl" : "Elöl";
   }
   if (els.raceAheadLap) {
     els.raceAheadLap.textContent = ahead
       ? `#${ahead.stnr} last ${ahead.last || "—"}`
-      : "P1 / nincs elöl";
+      : "vezet — nincs előtte";
+  }
+  if (els.raceAheadCard) {
+    els.raceAheadCard.classList.toggle("is-empty", !ahead);
   }
   if (els.raceLast) els.raceLast.textContent = focus?.LASTLAPTIME || "—";
   if (els.raceLastMeta) {
@@ -469,13 +479,19 @@ function renderRace(s, m) {
         : "—";
   }
   if (els.raceVsBehind) {
-    els.raceVsBehind.textContent = formatDelta(vsBehind);
-    els.raceVsBehind.className = `mono ${tone(vsBehind)}`;
+    els.raceVsBehind.textContent = behind ? formatDelta(vsBehind) : "—";
+    els.raceVsBehind.className = `mono ${behind ? tone(vsBehind) : ""}`;
+  }
+  if (els.raceBehindKicker) {
+    els.raceBehindKicker.textContent = behind ? "Last vs hátul" : "Hátul";
   }
   if (els.raceBehindLap) {
     els.raceBehindLap.textContent = behind
       ? `#${behind.stnr} last ${behind.last || "—"}`
       : "senki hátul";
+  }
+  if (els.raceBehindCard) {
+    els.raceBehindCard.classList.toggle("is-empty", !behind);
   }
   if (els.racePits) els.racePits.textContent = focus?.PITSTOPCOUNT ?? "—";
   if (els.raceLaps) els.raceLaps.textContent = focus?.LAPS ?? "—";
@@ -643,7 +659,7 @@ function setPointsView(view) {
   if (els.pointsKicker) {
     const live = isRaceMode(wallMode);
     els.pointsKicker.textContent = live
-      ? "Futam · szezon + mostani pont"
+      ? "Futam · szezon + élő pont"
       : pointsView === "teams"
         ? "Szezon · csapatok"
         : "Szezon · pilóták";
@@ -662,7 +678,7 @@ function renderPoints(s) {
   }
   if (els.pointsKicker) {
     els.pointsKicker.textContent = race
-      ? "Futam · szezon + mostani pont"
+      ? "Futam · szezon + élő pont"
       : pointsView === "teams"
         ? "Szezon · csapatok"
         : "Szezon · pilóták";
@@ -681,7 +697,7 @@ function renderPoints(s) {
       scale,
     });
     els.pointsHead.innerHTML = race
-      ? `<tr><th>P</th><th>Csapat</th><th>Pilóták</th><th>Szezon</th><th>+Most</th><th>Összesen</th></tr>`
+      ? `<tr><th>P</th><th>Csapat</th><th>Pilóták</th><th>Szezon</th><th>+Élő</th><th>Összesen</th></tr>`
       : `<tr><th>P</th><th>Csapat</th><th>Szezon</th></tr>`;
 
     const focusTeam = rows.find((t) => t.id === "revesz-reinert") ||
@@ -735,7 +751,7 @@ function renderPoints(s) {
     scale,
   });
   els.pointsHead.innerHTML = race
-    ? `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Hely</th><th>Szezon</th><th>+Most</th><th>Összesen</th></tr>`
+    ? `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Hely</th><th>Szezon</th><th>+Élő</th><th>Összesen</th></tr>`
     : `<tr><th>P</th><th>#</th><th>Versenyző</th><th>Szezon</th></tr>`;
 
   const focusRow = rows.find((r) => String(r.stnr) === focusNo) ||
@@ -844,12 +860,106 @@ function apply(s) {
   }
 }
 
-connectLive(apply);
+connectLive((raw) => apply(demoRaceSnapshot(raw)));
 setInterval(refreshFeedAge, 1000);
 
 els.pointsBtnDrivers?.addEventListener("click", () => setPointsView("drivers"));
 els.pointsBtnTeams?.addEventListener("click", () => setPointsView("teams"));
 setPointsView("drivers");
+
+/** Local/demo: `/?demo=race` forces futam UI even in quali. */
+function demoRaceSnapshot(s) {
+  if (new URLSearchParams(location.search).get("demo") !== "race") return s;
+  if (!s) return s;
+
+  const results = (s.results || []).map((r) => ({ ...r }));
+  const focusIdx = Math.max(
+    0,
+    results.findIndex((r) => String(r.STNR) === "1" || /KISS/i.test(r.NAME || "")),
+  );
+  const focus = results[focusIdx] ? { ...results[focusIdx] } : { ...s.focus };
+  if (focus) {
+    // Demo: put Kiss mid-pack so ahead+behind both show (real race uses true pos)
+    const demoPos = 3;
+    focus.POSITION = demoPos;
+    focus.STNR = focus.STNR || "1";
+    focus.NAME = focus.NAME || "KISS";
+    focus.GAP = "+1.842";
+    focus.INT = "+0.387";
+    focus.LASTLAPTIME = focus.LASTLAPTIME || "1:02.418";
+    focus.FASTESTLAP =
+      focus.FASTESTLAP && !String(focus.FASTESTLAP).startsWith("2:")
+        ? focus.FASTESTLAP
+        : "1:02.105";
+    focus.S1TIME = focus.S1TIME || "22.140";
+    focus.S2TIME = focus.S2TIME || "24.880";
+    focus.S3TIME = focus.S3TIME || "15.398";
+    focus.LAPS = focus.LAPS || "8";
+    focus.PITSTOPCOUNT = focus.PITSTOPCOUNT ?? "0";
+    focus.CHG = focus.CHG ?? 1;
+
+    // Reorder list so POSITION matches: P2 ahead, Kiss P3, P4 behind
+    const others = results.filter((r) => String(r.STNR) !== String(focus.STNR));
+    others.sort((a, b) => Number(a.POSITION) - Number(b.POSITION));
+    const rebuilt = [];
+    for (let i = 0; i < others.length; i++) {
+      if (rebuilt.length === demoPos - 1) rebuilt.push(focus);
+      rebuilt.push({ ...others[i], POSITION: rebuilt.length + 1 });
+    }
+    if (!rebuilt.some((r) => String(r.STNR) === String(focus.STNR))) {
+      rebuilt.splice(demoPos - 1, 0, focus);
+    }
+    rebuilt.forEach((r, i) => {
+      r.POSITION = i + 1;
+    });
+    focus.POSITION = demoPos;
+    results.length = 0;
+    results.push(...rebuilt);
+  }
+
+  const ahead = results.find((r) => Number(r.POSITION) === Number(focus.POSITION) - 1) || null;
+  const behind = results.find((r) => Number(r.POSITION) === Number(focus.POSITION) + 1) || null;
+
+  return {
+    ...s,
+    connected: true,
+    results,
+    focus,
+    session: {
+      ...(s.session || {}),
+      heat: "Race 3",
+      heatNumber: 3,
+      heatType: "R",
+    },
+    analysis: {
+      ...(s.analysis || {}),
+      mode: "race",
+      modeLabel: "FUTAM · DEMO",
+      battle: {
+        ahead: ahead
+          ? {
+              stnr: ahead.STNR,
+              name: ahead.NAME,
+              gap: focus.INT || ahead.INT,
+              last: ahead.LASTLAPTIME || "1:02.310",
+            }
+          : null,
+        behind: behind
+          ? {
+              stnr: behind.STNR,
+              name: behind.NAME,
+              gap: behind.INT || "+0.512",
+              last: behind.LASTLAPTIME || "1:02.590",
+            }
+          : null,
+        pack: results.slice(
+          Math.max(0, Number(focus.POSITION) - 2),
+          Number(focus.POSITION) + 2,
+        ),
+      },
+    },
+  };
+}
 
 /* ——— Phone app shell: dock, wake lock, track toggle ——— */
 const dock = $("pulseDock");

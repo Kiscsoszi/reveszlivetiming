@@ -532,6 +532,14 @@ body {
   border-top-color: var(--p-amber);
 }
 
+.hunt-hero.is-empty {
+  opacity: 0.55;
+}
+
+.hunt-hero.is-empty strong {
+  color: var(--p-muted);
+}
+
 .hunt-hero .pulse-kicker {
   margin: 0;
 }
